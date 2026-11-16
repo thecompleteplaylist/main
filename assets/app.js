@@ -1229,13 +1229,14 @@
     return state.songs.filter(hasVideo).map(function (s) { return s.i; });
   }
 
-  function toast(msg) {
+  function toast(msg, ms) {
+    ms = ms || 2800;
     var t = document.createElement("div");
     t.className = "toast";
     t.textContent = msg;
     document.body.appendChild(t);
-    setTimeout(function () { t.classList.add("out"); }, 2800);
-    setTimeout(function () { if (t.parentNode) t.parentNode.removeChild(t); }, 3600);
+    setTimeout(function () { t.classList.add("out"); }, ms);
+    setTimeout(function () { if (t.parentNode) t.parentNode.removeChild(t); }, ms + 800);
   }
 
   function fmtTime(sec) {
@@ -1647,6 +1648,18 @@
   /* ---------------- Picture-in-Picture (desktop Chrome/Edge) ---------------- */
   var pipWindow = null;
 
+  /* On coarse-pointer devices, Chromium/iOS suspend the YouTube iframe as soon
+     as the user leaves the browser. Say so once per session and point at the
+     routes that do work (Samsung Internet background play, YouTube app). */
+  function maybeMobileBgHint() {
+    try {
+      if (!window.matchMedia || !window.matchMedia("(pointer: coarse)").matches) return;
+      if (sessionStorage.getItem("msi.bghint")) return;
+      sessionStorage.setItem("msi.bghint", "1");
+      toast("On this phone, YouTube pauses when you switch apps. For background play, use Samsung Internet (free), or open the video in the YouTube app from the song page.", 9000);
+    } catch (e) { }
+  }
+
   function openPipWindow() {
     if (!window.documentPictureInPicture) {
       toast("Pop-out works on Chrome/Edge desktop. On mobile, use the notification media controls to keep playing with the screen locked.");
@@ -1798,6 +1811,7 @@
     updateBar();
     updateMediaSession();
     showBar();
+    maybeMobileBgHint();
     refreshDrawer();
     ensureYT(function () {
       if (!player.yt) {
