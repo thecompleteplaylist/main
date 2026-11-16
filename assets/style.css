@@ -310,7 +310,12 @@ input{font:inherit}
   display:none;
 }
 body.hasplayer .pbvideo{display:block}
-body.hasplayer .pbvideo.hidden{display:none}
+body.hasplayer .pbvideo.hidden{
+  opacity:0;visibility:hidden;pointer-events:none;
+  left:auto;right:-9999px;top:-9999px;bottom:auto;
+  width:320px;height:180px;transform:none;
+  transition:opacity .18s ease, visibility .18s ease;
+}
 #ytFrame,#ytFrame iframe{width:100%;height:100%;display:block;border:0}
 
 /* ---------- playlist drawer ---------- */

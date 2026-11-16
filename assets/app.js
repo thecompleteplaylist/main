@@ -1269,7 +1269,8 @@
     timer: null,
     dragging: false,
     blocked: {},
-    label: ""
+    label: "",
+    playing: false
   };
 
   function showBar() {
@@ -1577,6 +1578,7 @@
       el("pbCur").textContent = fmtTime(t);
       el("pbSeek").value = d ? Math.round(t / d * 1000) : 0;
     }
+    updateMediaPosition();
   }
 
   function startTimer() {
@@ -1586,6 +1588,156 @@
 
   function stopTimer() {
     if (player.timer) { clearInterval(player.timer); player.timer = null; }
+  }
+
+  /* ---------------- media session (lock screen / background playback) ---------------- */
+  function songArtwork(s) {
+    var poster = s && s.movie && s.movie.poster ? s.movie.poster : "";
+    if (poster) return [{ src: poster, sizes: "512x512", type: "image/jpeg" }];
+    return [];
+  }
+
+  function updateMediaSession() {
+    if (!("mediaSession" in navigator)) return;
+    var s = player.currentSong;
+    if (!s) {
+      try { navigator.mediaSession.metadata = null; } catch (e) { }
+      try { navigator.mediaSession.playbackState = "none"; } catch (e) { }
+      return;
+    }
+    var movie = (s.movie && (s.movie.title || s.movie.titleMl)) || "";
+    var singers = namesOf(s.singers) || "";
+    try {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: s.title || s.titleMl || "Song",
+        artist: singers,
+        album: (movie ? movie : "") + (s.year ? (movie ? " · " : "") + s.year : ""),
+        artwork: songArtwork(s)
+      });
+    } catch (e) { }
+    var ms = navigator.mediaSession;
+    function safe(action, fn) { try { ms.setActionHandler(action, fn); } catch (e) { } }
+    safe("play", function () { if (player.yt) player.yt.playVideo(); });
+    safe("pause", function () { if (player.yt) player.yt.pauseVideo(); });
+    safe("nexttrack", function () { next(); });
+    safe("previoustrack", function () { prev(); });
+    safe("seekto", function (d) {
+      if (player.yt && player.yt.seekTo && d && d.seekTime != null) player.yt.seekTo(Math.max(0, d.seekTime), true);
+    });
+    safe("seekforward", function () {
+      if (player.yt && player.yt.getCurrentTime) player.yt.seekTo((player.yt.getCurrentTime() || 0) + 15, true);
+    });
+    safe("seekbackward", function () {
+      if (player.yt && player.yt.getCurrentTime) player.yt.seekTo(Math.max(0, (player.yt.getCurrentTime() || 0) - 15), true);
+    });
+    safe("stop", function () { if (player.yt && player.yt.stopVideo) player.yt.stopVideo(); });
+    try { ms.playbackState = player.playing ? "playing" : "paused"; } catch (e) { }
+  }
+
+  function updateMediaPosition() {
+    var ms = navigator.mediaSession;
+    if (!ms || !ms.setPositionState || !player.yt || !player.yt.getDuration) return;
+    try {
+      var d = player.yt.getDuration() || 0;
+      var t = player.yt.getCurrentTime() || 0;
+      if (d > 0) ms.setPositionState({ duration: d, playbackRate: 1, position: Math.min(Math.max(0, t), d) });
+    } catch (e) { }
+  }
+
+  /* ---------------- Picture-in-Picture (desktop Chrome/Edge) ---------------- */
+  var pipWindow = null;
+
+  function openPipWindow() {
+    if (!window.documentPictureInPicture) {
+      toast("Pop-out works on Chrome/Edge desktop. On mobile, use the notification media controls to keep playing with the screen locked.");
+      return;
+    }
+    if (!player.currentSong || !player.currentVideo) {
+      toast("Play a song first, then pop it out.");
+      return;
+    }
+    if (pipWindow) { try { pipWindow.close(); } catch (e) { } pipWindow = null; return; }
+    var s = player.currentSong;
+    var v = player.currentVideo;
+    var vid = v && v.id ? v.id : "";
+    var startAt = 0;
+    try { startAt = Math.max(0, Math.floor(player.yt && player.yt.getCurrentTime ? player.yt.getCurrentTime() || 0 : 0)); } catch (e) { }
+    var wasPlaying = !!player.playing;
+
+    documentPictureInPicture.requestWindow({ width: 420, height: 320 }).then(function (pw) {
+      pipWindow = pw;
+      var pipPlayer = null;
+      var reached = startAt;
+      var tick = setInterval(function () {
+        try { if (pipPlayer && pipPlayer.getCurrentTime) reached = pipPlayer.getCurrentTime(); } catch (e) { }
+      }, 1000);
+
+      function finish() {
+        clearInterval(tick);
+        pipWindow = null;
+        if (player.yt && player.yt.loadVideoById && vid && player.currentVideo === v) {
+          try {
+            player.yt.loadVideoById(vid, Math.max(0, Math.floor(reached)));
+            if (!wasPlaying && player.yt.pauseVideo) player.yt.pauseVideo();
+          } catch (e) { }
+        }
+      }
+      pw.addEventListener("pagehide", finish);
+
+      try {
+        var doc = pw.document;
+        doc.title = "Now playing — MalayalaSangeetham";
+        var st = doc.createElement("style");
+        st.textContent =
+          "body{margin:0;background:#0d1015;color:#e8edf3;font-family:system-ui,'Segoe UI',sans-serif;display:flex;flex-direction:column;height:100vh;overflow:hidden}" +
+          ".piptitle{padding:10px 12px 2px;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}" +
+          ".pipsub{padding:0 12px 8px;font-size:12px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}" +
+          ".pipmount{flex:1;min-height:0;background:#000}" +
+          ".pipmount iframe,.pipmount>div{width:100%;height:100%;display:block;border:0}";
+        doc.head.appendChild(st);
+
+        var title = doc.createElement("div");
+        title.className = "piptitle";
+        title.textContent = (s.title || s.titleMl || "Now playing");
+        var sub = doc.createElement("div");
+        sub.className = "pipsub";
+        sub.textContent = ((namesOf(s.singers) || "") + ((s.movie && (s.movie.title || s.movie.titleMl)) ? " · " + (s.movie.title || s.movie.titleMl) : ""));
+        var mount = doc.createElement("div");
+        mount.className = "pipmount";
+        var target = doc.createElement("div");
+        mount.appendChild(target);
+        doc.body.appendChild(title);
+        doc.body.appendChild(sub);
+        doc.body.appendChild(mount);
+
+        if (vid && window.YT && window.YT.Player) {
+          try {
+            pipPlayer = new window.YT.Player(target, {
+              videoId: vid,
+              playerVars: { autoplay: 1, controls: 1, rel: 0, playsinline: 1, start: startAt },
+              events: {
+                onReady: function (ev) { try { ev.target.playVideo(); } catch (e) { } }
+              }
+            });
+          } catch (e) {
+            var iframe = doc.createElement("iframe");
+            iframe.src = "https://www.youtube.com/embed/" + encodeURIComponent(vid) + "?autoplay=1&start=" + startAt;
+            iframe.allow = "autoplay; encrypted-media";
+            target.appendChild(iframe);
+          }
+        } else if (vid) {
+          var iframe2 = doc.createElement("iframe");
+          iframe2.src = "https://www.youtube.com/embed/" + encodeURIComponent(vid) + "?autoplay=1&start=" + startAt;
+          iframe2.allow = "autoplay; encrypted-media";
+          target.appendChild(iframe2);
+        }
+      } catch (e) {
+        clearInterval(tick);
+        try { pw.close(); } catch (e2) { }
+        pipWindow = null;
+        toast("Could not open the pop-out player.");
+      }
+    }).catch(function () { pipWindow = null; toast("The browser blocked the pop-out window."); });
   }
 
   function ensureYT(cb) {
@@ -1644,6 +1796,7 @@
     player.currentSong = s;
     player.currentVideo = v;
     updateBar();
+    updateMediaSession();
     showBar();
     refreshDrawer();
     ensureYT(function () {
@@ -1661,8 +1814,8 @@
 
   function onYtState(ev) {
     if (ev.data === 0) { setTimeout(next, 120); return; }
-    if (ev.data === 1) { setPlayIcon(true); startTimer(); updateProgress(); }
-    else if (ev.data === 2) { setPlayIcon(false); stopTimer(); updateProgress(); }
+    if (ev.data === 1) { player.playing = true; setPlayIcon(true); startTimer(); updateProgress(); updateMediaSession(); updateMediaPosition(); }
+    else if (ev.data === 2) { player.playing = false; setPlayIcon(false); stopTimer(); updateProgress(); updateMediaSession(); }
   }
 
   function onYtError(ev) {
@@ -1765,7 +1918,9 @@
 
   function endQueue() {
     stopTimer();
+    player.playing = false;
     setPlayIcon(false);
+    updateMediaSession();
     player.pos = player.order.length;
     el("pbCur").textContent = "0:00";
     el("pbSeek").value = 0;
@@ -1780,6 +1935,8 @@
     player.pos = -1;
     player.currentSong = null;
     player.currentVideo = null;
+    player.playing = false;
+    updateMediaSession();
     player.label = "";
     var bar = el("playerBar");
     if (bar) bar.hidden = true;
@@ -1830,9 +1987,20 @@
       });
     }
     el("pbClose").addEventListener("click", closePlayer);
+    var pipBtn = el("pbPip");
+    if (pipBtn) {
+      if (window.documentPictureInPicture) {
+        pipBtn.addEventListener("click", openPipWindow);
+      } else {
+        pipBtn.style.display = "none";
+      }
+    }
     el("pbVid").addEventListener("click", function () {
       var v = el("pbVideo");
       v.classList.toggle("hidden");
+      if (v.classList.contains("hidden")) {
+        toast("Video off — the song keeps playing. Use the notification media controls when you switch apps.");
+      }
       layoutPlayer();
     });
     var seek = el("pbSeek");
