@@ -1,0 +1,94 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Malayalam Film Songs · The Complete Playlist</title>
+<meta name="description" content="Browse Malayalam film songs by year, movie, singer, music director, lyricist and director — searchable in English and Malayalam." />
+<meta name="robots" content="noarchive" />
+<link rel="stylesheet" href="assets/style.css?v=23" />
+</head>
+<body>
+<div class="app">
+
+  <header class="topbar">
+    <a class="brand" href="#/">
+      <span class="dot"></span>
+      <span class="brandtext">Malayalam Film Songs<small>The Complete Playlist</small></span>
+    </a>
+    <nav class="topnav">
+      <a href="#/years">Years</a>
+      <a href="#/movies">Movies</a>
+      <a href="#/singers">Singers</a>
+      <a href="#/music">Music</a>
+      <a href="#/lyricists">Lyricists</a>
+      <a href="#/directors">Directors</a>
+    </nav>
+    <div class="topsearch">
+      <input id="globalSearch" type="search" placeholder="Search songs, movies, people — English or Malayalam…" autocomplete="off" aria-label="Search" />
+      <span class="hint">/</span>
+    </div>
+  </header>
+
+  <main id="view" class="view">
+    <div class="boot">
+      <div class="boot-inner">
+        <div class="spinner"></div>
+        <h1>Loading the song database…</h1>
+        <p id="bootStatus">Downloading song data…</p>
+        <div class="bar"><div id="bootBar"></div></div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="foot">
+    <div>
+      Song data from <a href="https://msidb.org/" target="_blank" rel="noopener">MalayalaSangeetham.info</a> (MSI).
+      This site is a browsable index; nothing is hosted here. · <a href="#/admin">Admin</a>
+    </div>
+    <div id="footStats"></div>
+  </footer>
+</div>
+
+<div class="pbvideo" id="pbVideo"><div id="ytFrame"></div></div>
+<div class="pbqueue" id="pbQueue" hidden>
+  <div class="pbqhead">
+    <div class="pbqtabs" role="tablist" aria-label="Player panel">
+      <button id="pbTabNow" class="pbqtab on" type="button" role="tab" aria-selected="true">Now playing</button>
+      <button id="pbTabList" class="pbqtab" type="button" role="tab" aria-selected="false">Playlist</button>
+    </div>
+    <div class="pbqsub" id="pbQSub"></div>
+    <button id="pbQMin" class="iconbtn" type="button" title="Minimize panel" aria-label="Minimize panel">▾</button>
+  </div>
+  <div class="pbqbody">
+    <div class="pbqnow" id="pbQNow"></div>
+    <div class="pbqlist" id="pbQList" hidden><div class="pbqspacer" id="pbQSpacer"></div></div>
+  </div>
+</div>
+<div id="playerBar" class="playerbar" hidden>
+  <div class="pbmain">
+    <div class="pbinfo" id="pbInfo" title="Show song details">
+      <div class="pbtitle" id="pbTitle">—</div>
+      <div class="pbsub" id="pbSub"></div>
+    </div>
+    <div class="pbctl">
+      <button id="pbPrev" class="iconbtn" type="button" title="Previous" aria-label="Previous">⏮</button>
+      <button id="pbPlay" class="iconbtn pbplay" type="button" title="Play or pause" aria-label="Play">▶</button>
+      <button id="pbNext" class="iconbtn" type="button" title="Next" aria-label="Next">⏭</button>
+      <button id="pbShuffle" class="iconbtn" type="button" title="Shuffle" aria-label="Shuffle">🔀</button>
+      <button id="pbList" class="iconbtn" type="button" title="Playlist" aria-label="Playlist" aria-expanded="false">☰</button>
+      <button id="pbVid" class="iconbtn" type="button" title="Show or hide the video" aria-label="Video">▭</button>
+      <div class="pbtime">
+        <span id="pbCur">0:00</span>
+        <input id="pbSeek" type="range" min="0" max="1000" step="1" value="0" aria-label="Seek" />
+        <span id="pbDur">0:00</span>
+      </div>
+      <button id="pbClose" class="iconbtn" type="button" title="Close player" aria-label="Close player">✕</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/comments-config.js?v=4"></script>
+<script src="assets/app.js?v=36"></script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+# The catalogue is for people, not bulk copying.
+# Search engines may index the pages; data and asset files are off limits.
+
+User-agent: *
+Allow: /$
+Allow: /index.html
+Disallow: /data/
+Disallow: /assets/
+Disallow: /songdb/data/
+Disallow: /songdb/assets/
+
+# no common scraping/archiving crawlers
+User-agent: HTTrack
+Disallow: /
+
+User-agent: wget
+Disallow: /
+
+User-agent: curl
+Disallow: /
