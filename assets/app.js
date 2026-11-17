@@ -49,6 +49,212 @@
     return people.map(function (p) { return p.en || p.ml; }).join(", ");
   }
 
+  var RAGA_EN = {
+    "മോഹനം": "Mohanam",
+    "സിന്ധുഭൈരവി": "Sindhu Bhairavi",
+    "കല്യാണി": "Kalyani",
+    "മധ്യമാവതി": "Madhyamavati",
+    "കാപി": "Kapi",
+    "ആഭേരി": "Abheri",
+    "ദർബാരികാനഡ": "Darbari Kanada",
+    "ശുദ്ധധന്യാസി": "Shuddha Dhanyasi",
+    "ശിവരഞ്ജിനി": "Shivaranjani",
+    "ഹിന്ദോളം": "Hindolam",
+    "ആനന്ദഭൈരവി": "Ananda Bhairavi",
+    "ശങ്കരാഭരണം": "Shankarabharanam",
+    "യമുനകല്യാണി": "Yamuna Kalyani",
+    "ഖരഹരപ്രിയ": "Kharaharapriya",
+    "വൃന്ദാവനസാരംഗ": "Vrindavani Sarang",
+    "ഹംസധ്വനി": "Hamsadhwani",
+    "ചക്രവാകം": "Chakravakam",
+    "ചാരുകേശി": "Charukesi",
+    "ഹരികാംബോജി": "Harikambhoji",
+    "ജോഗ്": "Jog",
+    "ഷണ്മുഖപ്രിയ": "Shanmukhapriya",
+    "കീരവാണി": "Karaharapriya",
+    "പഹാഡി": "Pahadi",
+    "ആരഭി": "Arabhi",
+    "മായാമാളവഗൗള": "Mayamalavagowla",
+    "ശുദ്ധസാവേരി": "Shuddha Saveri",
+    "ദേശ്": "Desh",
+    "പന്തുവരാളി": "Pantuvaraali",
+    "ശുഭപന്തുവരാളി": "Shubha Pantuvaraali",
+    "പീലു": "Peelu",
+    "കാംബോജി": "Kambhoji",
+    "ശ്രീ": "Sri",
+    "ബാഗേശ്രി": "Bageshri",
+    "കാനഡ": "Kanada",
+    "ശാമ": "Saam",
+    "ഗൗരിമനോഹരി": "Gouri Manohari",
+    "വലചി": "Valachi",
+    "നഠഭൈരവി": "Nadabhairavi",
+    "ബേഗഡ": "Begada",
+    "ബിഹാഗ്": "Bihag",
+    "ബിലഹരി": "Bilahari",
+    "നാട്ടക്കുറിഞ്ഞി": "Nattakurinji",
+    "വകുളാഭരണം": "Vakulabharanam",
+    "മലയമാരുതം": "Malayamarutam",
+    "ആഭോഗി": "Abhogi",
+    "നീലാംബരി": "Neelambari",
+    "ധർമ്മവതി": "Dharmavati",
+    "രീതിഗൗള": "Reetigowla",
+    "വസന്ത": "Basant",
+    "ശ്രീരഞ്ജിനി": "Sriranjani",
+    "അമൃതവർഷിണി": "Amritavarshini",
+    "മാണ്ട്": "Mant",
+    "ഹംസാനന്ദി": "Hamsanandi",
+    "നാട്ട": "Natt",
+    "രേവതി": "Revathi",
+    "കല്യാണവസന്തം": "Kalyana Vasantham",
+    "തിലംഗ്": "Tilang",
+    "ശഹാന": "Shahana",
+    "ഹംസനാദം": "Hamsanadam",
+    "ഹമീർകല്യാണി": "Hameer Kalyani",
+    "സാരംഗ": "Sarang",
+    "സരസാംഗി": "Sarasangi",
+    "പുന്നാഗവരാളി": "Punnagavarali",
+    "സരസ്വതി": "Saraswati",
+    "കമാസ്": "Kamas",
+    "ദേവഗാന്ധാരി": "Devagandhari",
+    "യദുകുലകാംബോജി": "Yadukula Kambhoji",
+    "ബൗളി": "Bowli",
+    "സാരമതി": "Saramati",
+    "ഭീംപ്ലാസി": "Bheemplasi",
+    "ചെഞ്ചുരുട്ടി": "Chenchurutti",
+    "സിംഹേന്ദ്രമധ്യമം": "Simhendramadhyamam",
+    "മുഖാരി": "Mukhari",
+    "തോടി": "Todi",
+    "അഠാണ": "Athana",
+    "രഞ്ജിനി": "Ranjani",
+    "ദ്വിജാവന്തി": "Dwijavanthi",
+    "ചന്ദ്രകോണ്‍സ്": "Chandrakauns",
+    "സുരുട്ടി": "Surutti",
+    "രേവഗുപ്തി": "Revagupti",
+    "വാസന്തി": "Vasanthi",
+    "ഹേമവതി": "Hemavati",
+    "സുമനേശരഞ്ജിനി": "Sumanesha Ranjani",
+    "കേദാർ-ഹിന്ദുസ്ഥാനി": "Kedar Hindustani",
+    "ആഹരി": "Ahari",
+    "ഭൈരവി": "Bhairavi",
+    "ജോൺപുരി": "Jonpuri",
+    "മിയാൻ‌മൽഹർ": "Miyan Malhar",
+    "മിശ്രശിവരഞ്ജിനി": "Mishra Shivaranjani",
+    "ശുദ്ധസാരംഗ്": "Shuddha Sarang",
+    "പുഷ്പലതിക": "Pushpalatika",
+    "ധന്യാസി": "Dhanyasi",
+    "സാമന്തമലഹരി": "Samanta Malahari",
+    "പൂര്‍വികല്യാണി": "Purvi Kalyani",
+    "നവരസകന്നട": "Navarasakannada",
+    "ബഹുധാരി": "Bahudari",
+    "ഗംഭീരനാട്ട": "Gambhiranata",
+    "കുറിഞ്ഞി": "Kurinji",
+    "സാവിത്രി": "Savitri",
+    "കേദാരഗൗള": "Kedaragowla",
+    "ജയന്തശ്രീ": "Jayanthashree",
+    "വിജയനാഗരി": "Vijayanagari",
+    "ചലനാട്ട": "Chalanatta",
+    "ഭൂപാളം": "Bhoopalam",
+    "ജനസമ്മോദിനി": "Janasammodini",
+    "രസികരഞ്ജിനി": "Rasika Ranjani",
+    "കേദാരം": "Kedaram",
+    "കുന്തളവരാളി": "Kunthalavarali",
+    "കർണ്ണാടകശുദ്ധസാവേരി": "Karnataka Shuddha Saveri",
+    "കനകാംഗി": "Kanakangi",
+    "സല്ലാപം": "Sallapam",
+    "വനസ്പതി": "Vanaspati",
+    "ഭാട്ടിയാര്": "Bhatiyar",
+    "കർണരഞ്ജിനി": "Karnaranjani",
+    "സൗരാഷ്ട്രം": "Saurashtram",
+    "ബിന്ദുമാലിനി": "Bindumalini",
+    "നർത്തകി": "Narthaki",
+    "മേഘമല്ഹാര്": "Megh Malhar",
+    "രതിപതിപ്രിയ": "Ratipatipriya",
+    "ആന്ദോളിക": "Andolika",
+    "ദർബാർ": "Darbar",
+    "നാഥനാമക്രിയ": "Nathanamakriya",
+    "സാവേരി": "Saveri",
+    "ലവംഗി": "Lavangi",
+    "സാളഗഭൈരവി": "Salagabhairavi",
+    "രുഗ്മാംബരി": "Rugmambari",
+    "കദനകുതൂഹലം": "Kadana Kuthuhalam",
+    "വിജയശ്രീ": "Vijayashree",
+    "മുൾതാനി": "Multani",
+    "ഹുസേനി": "Huseni",
+    "പൂർണ്ണചന്ദ്രിക": "Poornachandrika",
+    "ജപനീയ": "Japaneeya",
+    "ശ്യാംകല്യാൺ": "Shyam Kalyan",
+    "സൂര്യകോൺസ്": "Suryakauns",
+    "ഗുർജരിതോടി": "Gurjari Todi",
+    "നാഗനന്ദിനി": "Naganandini",
+    "രവിചന്ദ്രിക": "Ravichandrika",
+    "ലളിത": "Lalith",
+    "വീണാധരി": "Veenadhari",
+    "വിഭാവരി": "Vibhavari",
+    "രസികപ്രിയ": "Rasikapriya",
+    "മലഹരി": "Malahari",
+    "ജഗന്മോഹിനി": "Jagamohini",
+    "മാനവതി": "Manavati",
+    "ഖമാജ്-ഹിന്ദുസ്ഥാനി": "Khamaj Hindustani",
+    "ജ്യോതിസ്വരൂപിണി": "Jyotiswaroopini",
+    "ചിത്രാംബരി": "Chitrambari",
+    "ബഹുമാരിണി": "Bahumalini",
+    "നിരോഷ്ഠ": "Niroshta",
+    "ഐരാവതി": "Airavathi",
+    "ഗോരഖ്കല്യാൺ": "Gorakh Kalyan",
+    "മേഘ്": "Megh",
+    "രഘുപ്രിയ": "Raghupriya",
+    "തിലക്-കാമോദ്": "Tilak Kamod",
+    "ജലധർകേദാർ": "Jaladhara Kedar",
+    "ധനാശ്രീ": "Dhanashree",
+    "ബസന്ത്ബഹാർ": "Basant Bahar",
+    "കലാവതി": "Kalavati",
+    "ദേശാക്ഷി": "Desakshi",
+    "രോഹിണി": "Rohini",
+    "ലതാംഗി": "Latangi",
+    "സരസ്വതിമനോഹരി": "Saraswati Manohari",
+    "ഗോപികാതിലകം": "Gopikathilakam",
+    "മാൽഗുഞ്ചി": "Malgunji",
+    "ആനന്ദാംബരി": "Anandambari",
+    "ജനരഞ്ജിനി": "Janaranjani",
+    "ഗൗള": "Gowla",
+    "ദേവമനോഹരി": "Devamanohari",
+    "രാഗവർദ്ധിനി": "Ragavardhini",
+    "നാഗഗാന്ധാരി": "Naga Gandhari",
+    "വാചസ്പതി": "Vachaspati",
+    "വസന്തഭൈരവി": "Vasantha Bhairavi",
+    "താണ്ഡവപ്രിയ": "Tandavapriya",
+    "മനോലയം": "Manolyam",
+    "പൊന്നി": "Ponni",
+    "ഋഷഭപ്രിയ": "Rishabapriya",
+    "ധേനുക": "Dhenuka",
+    "ഓംകാരഘോഷിണി": "Omkaraghoshini",
+    "മല്ലികാവസന്തം": "Mallika Vasantham"
+  };
+
+  var RAGA_NORM = null;
+  function ragamCanon(k) {
+    return String(k || "")
+      .normalize("NFC")
+      .replace(/[\u200B\u200C\u200D\uFEFF]/g, "")
+      .replace(/\s+/g, "");
+  }
+  function buildRagaNorm() {
+    RAGA_NORM = {};
+    for (var k in RAGA_EN) {
+      if (Object.prototype.hasOwnProperty.call(RAGA_EN, k)) {
+        RAGA_NORM[ragamCanon(k)] = RAGA_EN[k];
+      }
+    }
+  }
+  function ragaEn(ragaKey) {
+    if (!RAGA_NORM) buildRagaNorm();
+    return RAGA_NORM[ragamCanon(ragaKey)] || "";
+  }
+  /* canonical index key: zero-width / whitespace stripped */
+  function ragamKey(ragaKey) {
+    return ragamCanon(ragaKey);
+  }
+
   var state = {
     ready: false,
     songs: [],
@@ -57,6 +263,7 @@
     movies: new Map(),
     indexes: null,
     people: new Map(),
+    ragams: new Map(),
     searchTimer: null,
     overrides: { songs: {}, movies: {} },
     adminTarget: null
@@ -300,6 +507,7 @@
           singers: parsePeople(r[sf.singers], r[sf.singersMl]),
           lyricist: parsePeople(r[sf.lyricist], r[sf.lyricistMl]),
           music: parsePeople(r[sf.music], r[sf.musicMl]),
+          raga: r[sf.raga] || "",
           director: [],
           movie: null,
           hay: ""
@@ -339,10 +547,12 @@
   function buildIndexes() {
     var idx = {
       year: new Map(), singer: new Map(), lyricist: new Map(),
-      music: new Map(), director: new Map(), movie: state.movies
+      music: new Map(), director: new Map(), raga: new Map(),
+      movie: state.movies
     };
     var reg = new Map();
     state.people = reg;
+state.ragams = new Map();
 
     function register(p) {
       var r = reg.get(p.key);
@@ -382,6 +592,10 @@
       s.singers.forEach(function (p) { hay.push(p.en, p.ml); });
       s.lyricist.forEach(function (p) { hay.push(p.en, p.ml); });
       s.music.forEach(function (p) { hay.push(p.en, p.ml); });
+      (s.raga || "").split(",").forEach(function (k) {
+        var ck = ragamKey(k);
+        if (ck) { hay.push(ck, ragaEn(ck)); }
+      });
       s.hay = hay.join(" ").toLowerCase();
 
       state.byId.set(s.id, s);
@@ -389,6 +603,15 @@
       s.singers.forEach(function (p) { push(idx.singer, p.key, s.i); });
       s.lyricist.forEach(function (p) { push(idx.lyricist, p.key, s.i); });
       s.music.forEach(function (p) { push(idx.music, p.key, s.i); });
+      (s.raga || "").split(",").forEach(function (k) {
+        var raw = k.trim();
+        var key = ragamKey(raw);
+        if (key) push(idx.raga, key, s.i);
+      });
+    });
+
+    idx.raga.forEach(function (arr, key) {
+      state.ragams.set(key, { ml: key, en: ragaEn(key) || "", count: arr.length });
     });
 
     state.movies.forEach(function (m) {
@@ -424,7 +647,7 @@
   }
 
   var ROUTE_KIND = { singer: "singers", music: "music", lyricist: "lyricists", director: "directors" };
-  var NAV_FOR = { year: "years", movie: "movies", song: "", singer: "singers", music: "music", lyricist: "lyricists", director: "directors" };
+  var NAV_FOR = { year: "years", movie: "movies", song: "", singer: "singers", music: "music", lyricist: "lyricists", director: "directors", ragam: "ragams", ragams: "ragams" };
 
   function letterOf(name) {
     var ch = (name || "").trim().charAt(0).toUpperCase();
@@ -528,6 +751,7 @@
     var musicCount = idx.music.size;
     var lyricCount = idx.lyricist.size;
     var dirCount = idx.director.size;
+    var ragaCount = idx.raga.size;
     var yearCount = idx.year.size;
     var yearsArr = Array.from(idx.year.keys()).map(Number).filter(Boolean).sort(function (a, b) { return a - b; });
     var span = yearsArr.length ? yearsArr[0] + "–" + yearsArr[yearsArr.length - 1] : "";
@@ -537,7 +761,7 @@
       '<div class="eyebrow">The Complete Playlist</div>' +
       "<h1>Every Malayalam film song,<br><em>sorted the way you remember them.</em></h1>" +
       "<p>Browse " + num(state.songs.length) + " songs from " + num(movieCount) +
-      " films — by year, movie, singer, music director, lyricist or director. " +
+      " films — by year, movie, singer, music director, lyricist, director or ragam. " +
       "English and Malayalam names are searchable. Pick a category to see its list, then open any entry for the songs.</p>" +
       '<div class="bigstats">' +
       "<div><b>" + num(state.songs.length) + "</b>Songs</div>" +
@@ -545,6 +769,7 @@
       "<div><b>" + num(singerCount) + "</b>Singers</div>" +
       "<div><b>" + num(musicCount) + "</b>Music directors</div>" +
       "<div><b>" + num(yearCount) + "</b>Years</div>" +
+      "<div><b>" + num(ragaCount) + "</b>Ragams</div>" +
       "</div>" +
       '<div class="playall">' +
         (state.videos.size
@@ -562,6 +787,7 @@
       cat("#/music", "🎼", "Music directors", "Composers and music directors of Malayalam cinema.", num(musicCount) + " composers") +
       cat("#/lyricists", "✍️", "Lyricists", "Poets and lyricists who wrote the words.", num(lyricCount) + " lyricists") +
       cat("#/directors", "🎥", "Directors", "Film directors, linked to the songs in their films.", num(dirCount) + " directors") +
+      cat("#/ragams", "🎶", "Ragams", "Songs grouped by raga, the melodic mode of the performance.", num(ragaCount) + " ragams") +
       "</div>" +
 
       '<section class="sectionhead"><h2>Recent years</h2><a href="#/years">All years →</a></section>' +
@@ -754,6 +980,72 @@
     });
   }
 
+  /* ---------------- ragams ---------------- */
+  function ragamEntries() {
+    var list = [];
+    state.ragams.forEach(function (r, key) {
+      list.push({ key: key, en: r.en || r.ml, ml: r.en ? r.ml : "", count: r.count });
+    });
+    list.sort(function (a, b) { return cmp(a.en, b.en); });
+    return list;
+  }
+
+  function ragamNameOf(key) {
+    var canon = ragamKey(key);
+    var r = state.ragams.get(canon) || { ml: canon, en: "" };
+    return { en: r.en || r.ml, ml: r.en ? r.ml : "", count: r.count || 0 };
+  }
+
+  function renderRagams() {
+    var list = ragamEntries();
+    var html = crumbs([{ label: "Ragams" }]) +
+      '<div class="pagehead"><div class="kicker">Browse</div><h1>Ragams</h1>' +
+      '<div class="sub"><b>' + num(list.length) + "</b> ragams · <b>" + num(state.songs.length) + "</b> songs</div></div>" +
+      '<div class="tools"><input id="filterBox" type="search" placeholder="Filter ragams…" autocomplete="off" />' +
+      '<span class="mut" id="filterCount"></span></div>' +
+      '<div class="letters elist" id="letters"></div>';
+    layout(html);
+    var box = el("filterBox");
+    var letters = el("letters");
+    var countEl = el("filterCount");
+
+    function draw() {
+      var q = box.value.trim().toLowerCase();
+      var shown = q ? list.filter(function (e) {
+        return (e.en + " " + (e.ml || "")).toLowerCase().indexOf(q) >= 0;
+      }) : list;
+      countEl.textContent = q ? num(shown.length) + " found" : "";
+      letters.innerHTML = "";
+      if (!shown.length) { letters.innerHTML = '<div class="nores">Nothing matches that filter.</div>'; return; }
+      chunked(letters, shown, function (it) {
+        var a = document.createElement("a");
+        a.className = "ecard";
+        a.href = hashFor(["ragam", it.key]);
+        a.innerHTML = '<span class="name">' + esc(it.en) + (it.ml ? mlSpan(it.ml) : "") + "</span>" +
+          '<span class="num">' + num(it.count) + "</span>";
+        return a;
+      }, function (it) { return letterOf(it.en); }, 240);
+    }
+    box.addEventListener("input", draw);
+    draw();
+  }
+
+  function renderRagamSongs(ragaKey) {
+    var canon = ragamKey(ragaKey);
+    var r = ragamNameOf(canon);
+    var ids = state.indexes.raga.get(canon) || [];
+    songsView({
+      crumbs: [{ label: "Ragams", href: "#/ragams" }, { label: r.en }],
+      kicker: "Ragam",
+      title: r.en,
+      titleMl: r.ml || "",
+      ids: ids,
+      queueLabel: r.en,
+      sub: num(new Set(ids.map(function (i) { return state.songs[i].movieId; })).size) + " " +
+        plural(new Set(ids.map(function (i) { return state.songs[i].movieId; })).size, "movie")
+    });
+  }
+
   function renderYear(year) {
     var y = Number(year) || 0;
     var ids = state.indexes.year.get(String(y)) || [];
@@ -835,6 +1127,16 @@
     }).join(" ") : '<span class="dim">—</span>';
   }
 
+  function ragaChips(raga) {
+    var keys = String(raga || "").split(",").map(function (k) { return ragamKey(k.trim()); }).filter(Boolean);
+    if (!keys.length) return '<span class="dim">—</span>';
+    return keys.map(function (key) {
+      var en = ragaEn(key);
+      return '<a class="chip" href="' + hashFor(["ragam", key]) + '">' +
+        esc(en || key) + (en ? mlSpan(key) : "") + "</a>";
+    }).join(" ");
+  }
+
   function renderSong(id) {
     var s = state.byId.get(String(id));
     if (!s) { notFound("song"); return; }
@@ -857,6 +1159,7 @@
             "<dt>Singers</dt><dd>" + chips("singer", s.singers) + "</dd>" +
             "<dt>Lyricist</dt><dd>" + chips("lyricist", s.lyricist) + "</dd>" +
             "<dt>Music</dt><dd>" + chips("music", s.music) + "</dd>" +
+            (s.raga ? '<dt>Raaga</dt><dd>' + ragaChips(s.raga) + "</dd>" : "") +
             "<dt>Director</dt><dd>" + chips("director", s.director) + "</dd>" +
             "<dt>Year</dt><dd>" + (s.year ? '<a href="' + hashFor(["year", s.year]) + '">' + s.year + "</a>" : "—") + "</dd>" +
             "<dt>Movie</dt><dd>" + (s.movieId
@@ -1183,6 +1486,11 @@
         entHits.push({ href: hashFor([kind.route, e.name]), name: e.name, ml: e.ml, label: kind.singular, count: e.count });
       });
     });
+    ragamEntries().filter(function (e) {
+      return (e.en + " " + (e.ml || "")).toLowerCase().indexOf(needle) >= 0;
+    }).slice(0, 8).forEach(function (e) {
+      entHits.push({ href: hashFor(["ragam", e.key]), name: e.en, ml: e.ml, label: "ragam", count: e.count });
+    });
 
     var html = '<div class="pagehead"><div class="kicker">Search</div><h1>' + esc(q) + "</h1>" +
       '<div class="sub">' + num(songHits.length) + " song " + plural(songHits.length, "match", "matches") +
@@ -1482,6 +1790,7 @@
         "<dt>Singers</dt><dd>" + chips("singer", s.singers) + "</dd>" +
         "<dt>Lyricist</dt><dd>" + chips("lyricist", s.lyricist) + "</dd>" +
         "<dt>Music</dt><dd>" + chips("music", s.music) + "</dd>" +
+        (s.raga ? '<dt>Raaga</dt><dd>' + ragaChips(s.raga) + "</dd>" : "") +
         (s.director.length ? "<dt>Director</dt><dd>" + chips("director", s.director) + "</dd>" : "") +
       "</dl>" +
       '<div class="pnactions">' +
@@ -2009,6 +2318,24 @@
         pipBtn.style.display = "none";
       }
     }
+    var ytBtn = el("pbYt");
+    if (ytBtn) {
+      ytBtn.addEventListener("click", function () {
+        var s = player.currentSong;
+        var v = player.currentVideo;
+        var url;
+        if (v && v.id) {
+          url = "https://www.youtube.com/watch?v=" + encodeURIComponent(v.id);
+        } else if (s) {
+          url = "https://www.youtube.com/results?search_query=" +
+            encodeURIComponent((s.title || s.titleMl) + " " + ((s.movie && (s.movie.title || s.movie.titleMl)) || "") + " Malayalam song");
+        } else {
+          toast("Play a song first.");
+          return;
+        }
+        window.open(url, "_blank", "noopener");
+      });
+    }
     el("pbVid").addEventListener("click", function () {
       var v = el("pbVideo");
       v.classList.toggle("hidden");
@@ -2446,6 +2773,8 @@
     if (section === "movies") return renderMovies();
     if (section === "movie" && p[1]) return renderMovie(p[1]);
     if (section === "song" && p[1]) return renderSong(p[1]);
+    if (section === "ragams") return renderRagams();
+    if (section === "ragam" && p[1]) return renderRagamSongs(p[1]);
     if (KINDS[section] && !p[1]) return renderEntityIndex(section);
     if (p[1] && ROUTE_KIND[section]) return renderEntitySongs(ROUTE_KIND[section], p[1]);
     renderHome();
