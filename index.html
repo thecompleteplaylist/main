@@ -6,7 +6,7 @@
 <title>Malayalam Film Songs · The Complete Playlist</title>
 <meta name="description" content="Browse Malayalam film songs by year, movie, singer, music director, lyricist and director — searchable in English and Malayalam." />
 <meta name="robots" content="noarchive" />
-<link rel="stylesheet" href="assets/style.css?v=24" />
+<link rel="stylesheet" href="assets/style.css?v=30" />
 </head>
 <body>
 <div class="app">
@@ -17,6 +17,7 @@
       <span class="brandtext">Malayalam Film Songs<small>The Complete Playlist</small></span>
     </a>
     <nav class="topnav">
+      <a href="#/songs">All songs</a>
       <a href="#/years">Years</a>
       <a href="#/movies">Movies</a>
       <a href="#/singers">Singers</a>
@@ -44,8 +45,8 @@
 
   <footer class="foot">
     <div>
-      Song data from <a href="https://msidb.org/" target="_blank" rel="noopener">MalayalaSangeetham.info</a> (MSI).
-      This site is a browsable index; nothing is hosted here. · <a href="#/admin">Admin</a>
+      A browsable index of Malayalam film songs; nothing is hosted here.
+      · <a href="#/admin">Admin</a>
     </div>
     <div id="footStats"></div>
   </footer>
@@ -80,7 +81,7 @@
       <button id="pbList" class="iconbtn" type="button" title="Playlist" aria-label="Playlist" aria-expanded="false">☰</button>
       <button id="pbVid" class="iconbtn" type="button" title="Show or hide the video" aria-label="Video">▭</button>
       <button id="pbPip" class="iconbtn" type="button" title="Pop out video (Picture-in-Picture)" aria-label="Pop out video">⧉</button>
-      <button id="pbYt" class="iconbtn" type="button" title="Open in YouTube (keeps playing in the YouTube app)" aria-label="Open in YouTube">↗</button>
+      <button id="pbYt" class="iconbtn" type="button" title="Open in the video app (keeps playing there)" aria-label="Open in the video app">↗</button>
       <div class="pbtime">
         <span id="pbCur">0:00</span>
         <input id="pbSeek" type="range" min="0" max="1000" step="1" value="0" aria-label="Seek" />
@@ -91,7 +92,20 @@
   </div>
 </div>
 
-<script src="assets/comments-config.js?v=4"></script>
-<script src="assets/app.js?v=44"></script>
+<div class="modal-overlay" id="editModal" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="editModalTitle">
+    <div class="modal-top">
+      <div class="modal-head">
+        <div class="kicker" id="editModalKicker">Admin</div>
+        <h2 id="editModalTitle">Edit</h2>
+      </div>
+      <button id="editModalClose" class="iconbtn" type="button" title="Close" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-body" id="editModalBody"></div>
+  </div>
+</div>
+
+<script src="assets/comments-config.js?v=5"></script>
+<script src="assets/app.js?v=53"></script>
 </body>
 </html>

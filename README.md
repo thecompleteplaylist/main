@@ -1,7 +1,7 @@
 # Malayalam Film Songs — The Complete Playlist
 
 A static, GitHub-Pages-friendly index of Malayalam film songs, built from the
-public listings at [MalayalaSangeetham.info](https://msidb.org/) (MSI).
+owner's bilingual catalogue export.
 Every song, film and credit carries both its English and Malayalam name, and
 both scripts are searchable.
 
@@ -10,7 +10,7 @@ step at runtime and no server: the browser fetches three packed data files once,
 decodes them in memory, builds its indexes, and everything after that is
 instant.
 
-Data snapshot (MSI, generated 2026-11-15): **30,390 songs**, **9,319 films**
+Data snapshot (generated 2026-11-15): **30,390 songs**, **9,319 films**
 (9,258 listed + 61 stubs), **5,638 singers**, **2,049 music directors**,
 **2,994 lyricists** and **2,866 directors** with songs, all with English and
 Malayalam names.
@@ -20,6 +20,7 @@ Malayalam names.
 | Category | URL |
 | --- | --- |
 | Home | `#/` |
+| All songs | `#/songs` |
 | Years | `#/years` → `#/year/1993` |
 | Movies | `#/movies` → `#/movie/1204` |
 | Singers | `#/singers` → `#/singer/KJ%20Yesudas` |
@@ -27,6 +28,14 @@ Malayalam names.
 | Lyricists | `#/lyricists` → `#/lyricist/Vayalar%20Ramavarma` |
 | Directors | `#/directors` → `#/director/Bharathan` |
 | Song detail | `#/song/2104` |
+
+The All songs view lists every entry A→Z — weak matches and songs with no
+matched video included — and its badge shows the video match grade
+(**High / Medium / Low / Manual / No match**) next to the film and year.
+The grade pills above the list act as a filter (pick any number of them; no
+pills selected shows everything), and they compose with the text filter.
+**Both the badges and the grade filter are admin-only** — visitors see the
+plain rows without any match-grade decoration.
 
 The search box searches songs and names at the same time: titles, films,
 singers, lyricists, music directors and directors, in **English or Malayalam**
@@ -41,7 +50,7 @@ without any server-side rewrite rules.
 1. Copy **the contents of this folder** (`index.html`, `assets/`, `data/`,
    `robots.txt`) into the folder in your repository that should serve the site —
    for example `songs/`. The `comments/` folder is setup documentation and the
-   Apps Script source; it is not needed at runtime, but it is harmless to
+   reader script source; it is not needed at runtime, but it is harmless to
    publish.
 2. Commit and push. The site will be at
    `https://<user>.github.io/<repo>/songs/`.
@@ -62,13 +71,13 @@ not JSON, so they do not grow again in transfer.
 index.html          app shell
 assets/style.css    styling (dark theme, bilingual typography)
 assets/app.js       data loading, indexes, hash router, all views, admin editor
-assets/comments-config.js  Google Form / Sheet comment settings (see below)
+assets/comments-config.js  form / sheet comment settings (see below)
 data/songs.dat      every song (compressed + AES encrypted)
 data/movies.dat     every film (title, year, music, lyricist, director)
-data/videos.dat     song id → YouTube video (only matched songs)
+data/videos.dat     song id → video (only matched songs)
 data/overrides.json admin corrections published for everyone (optional)
 data/meta.json      counts + generation date
-comments/           comment form + Sheet setup guide and Apps Script reader
+comments/           comment form + sheet setup guide and reader script
 robots.txt          keeps crawlers out of data/ and assets/
 ```
 
@@ -96,8 +105,8 @@ files stay small.
 }
 ```
 
-* `id` — song id on MSI (`s.php?<id>`)
-* `movieId` — film id on MSI (`m.php?<id>`); `"0"` when the listing has no film
+* `id` — song id in the source catalogue
+* `movieId` — film id in the source catalogue; `"0"` when the listing has no film
 * `title` / `titleMl` — English and Malayalam titles
 * `singers` / `lyricist` / `music` — comma-separated English names
 * `singersMl` / `lyricistMl` / `musicMl` — the same names in Malayalam, in the
@@ -125,7 +134,7 @@ film. The 2,245 listed films without any songs are kept too and show a
 
 ## Playback
 
-Songs that have been matched to a YouTube upload play inside the page. A player
+Songs that have been matched to a video play inside the page. A player
 bar docks at the bottom with a small video panel, the song and film titles,
 previous/next, play/pause, shuffle, a seek bar, a video show/hide button and a
 playlist button. Queues are built from what is on screen:
@@ -135,6 +144,9 @@ playlist button. Queues are built from what is on screen:
 * **Any list** (year, film, singer, composer, lyricist, director, search
   results) — *Play all* and *Shuffle* use the current filter and sort order.
 * **A song page** — *Play* starts the film's songs at that song.
+* **Any song row** — a ▶ button appears on hover at the right edge of the row. It plays
+  the list you are looking at, starting at that song; songs without a matched video are
+  skipped (and a row with no match at all shows a notice instead of playing).
 
 The player panel opens with a new queue and has two tabs:
 
@@ -153,7 +165,7 @@ playlist button in the player bar; if you minimise it, later queues stay
 minimised until you restore it again.
 
 Songs without a matched video are skipped. If a video refuses embedding
-(YouTube error 101/150) or is otherwise unplayable, the player remembers it for
+(error 101/150 from the video host) or is otherwise unplayable, the player remembers it for
 the session and moves to the next song.
 
 Matches live in `songdb-work/data-json/videos.json`, separate from the song
@@ -180,9 +192,14 @@ catalogue. Go to `#/admin` (also linked from the footer) and sign in.
 * Password: set when this feature was added; it is **not stored anywhere** —
   only a salted PBKDF2-SHA-256 hash lives in `assets/app.js`.
 
-After signing in, *Edit* links appear on song and film pages, and the admin page
-has a search box. Every field can be changed: both titles, year, singers,
-lyricist, music, and the YouTube video id (the 11-character code after
+After signing in, every song row in the browse lists (All songs, year/film/singer/
+music/lyricist/director/ragam lists, search results) carries two small icon
+buttons at its right edge: a ▶ that plays the list from that song, and a pencil
+✏️ that edits it. Song and film pages keep their own *Edit* buttons, and the
+admin page has a search box. Clicking any of them opens the editor as a popup
+dialog; *Cancel*, `Esc`, the close button or clicking the dimmed backdrop
+closes it, and saving applies the change immediately and closes the dialog. Every field can be changed: both titles, year, singers,
+lyricist, music, and the video id (the 11-character code after
 `watch?v=`; empty means "no video"). Correcting a film's year updates all of its
 songs that do not have their own correction.
 
@@ -211,12 +228,12 @@ To change the password later, run
 Every song and film page carries a comment section. **Write a comment** opens a
 dark-themed form on the page with just **Name** and **Comment**; the item type,
 id and title are submitted as hidden values. The form posts to the response
-endpoint of a Google Form, which stores the comment in its linked Google Sheet.
-The page then reads comments back through a small Apps Script web app using
-JSONP. There is no server and no embedded Google iframe; an **Open the Google
-Form** link is available for anyone who prefers Google's own form. (Google
-Forms cannot hide pre-filled questions, so that fallback shows the three item
-fields; the on-site form is what hides them.) The section is hidden until the
+endpoint of a form owned by the site owner, which stores the comment in its linked
+sheet. The page then reads comments back through a small reader script using
+JSONP. There is no server and no embedded third-party iframe; an **Open the
+form** link is available for anyone who prefers the provider's own form. (The
+form service cannot hide pre-filled questions, so that fallback shows the three
+item fields; the on-site form is what hides them.) The section is hidden until the
 form and reader URLs are filled in
 [`assets/comments-config.js`](assets/comments-config.js).
 
@@ -225,11 +242,10 @@ and moderation): [`comments/SETUP.md`](comments/SETUP.md). The reader code to
 paste into the spreadsheet is [`comments/appsscript.gs`](comments/appsscript.gs).
 
 Comments are public and moderated in the sheet: deleting a row removes the
-comment from the site. The sheet itself stays private — only the Apps Script,
+comment from the site. The sheet itself stays private — only the reader script,
 running as the owner, reads it. Up to the latest 100 comments per item are
-shown, newest first. The custom form uses Google's undocumented
-`formResponse` endpoint, so the fallback Google Form link is worth keeping
-available.
+shown, newest first. The custom form uses the undocumented `formResponse`
+endpoint, so the fallback form link is worth keeping available.
 
 ## Protecting the data
 
@@ -248,12 +264,12 @@ mathematically unreadable to a determined visitor.
   encrypted bundle; re-using it elsewhere means writing code to decrypt it too.
 * **Real access control needs a server.** If the catalogue must never be
   downloadable, put the data behind an authenticated API (for example a
-  Cloudflare Worker that checks a token and rate-limits by IP) and have this
+  edge worker that checks a token and rate-limits by IP) and have this
   page fetch from it.
 
 ## Finding the videos
 
-`songdb-work/yt_search.ps1` searches YouTube for every song and caches one JSON
+`songdb-work/yt_search.ps1` searches for a matching video for every song and caches one JSON
 line per song in `songdb-work/yt_cache/`; `songdb-work/yt_merge.ps1` turns the
 cache into `songdb-work/data-json/videos.json` and repacks `data/videos.dat`.
 
@@ -291,19 +307,19 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\songdb-work\pack_data.ps1
 ```
 
 `msi_scrape.ps1` walks `songs.php` and `movies.php` for letters A–Z at 25 rows
-per page, in both the Malayalam (`msidb.org`) and English (`en.msidb.org`)
-listings, and joins the two by MSI id. It caches each letter in
+per page, in both the Malayalam and English listings, and joins the two by source id.
+It caches each letter in
 `songdb-work/msi_cache/`, so an interrupted run resumes where it stopped.
 Useful switches: `-Letters ABC` (subset), `-OnlySongs`, `-OnlyMovies`,
 `-MaxPages N` (quick test), `-DelayMs 400`, `-Force` (ignore the cache).
 
-`msi_build.ps1` (called by `finalize_msi.ps1`) cleans names, drops MSI
+`msi_build.ps1` (called by `finalize_msi.ps1`) cleans names, drops source-listing
 placeholder values (`Uncategorized`, `Uncatagorized`, `Not Available`,
 `No Songs`, `Na`, `Various`, `-`, em/en dashes, and their Malayalam
 equivalents such as `ഗാനങ്ങൾ ഇല്ല`), creates film stubs for song references,
 and writes the compact `v2` JSON plus `meta.json` — always UTF-8 without a BOM.
 
-The scraper also removes the censor badge (`U` / `A`) that MSI appends to film
+The scraper also removes the censor badge (`U` / `A`) that the source listings append to film
 titles inside the listing, so *A Life Diary* is stored without a trailing `U`.
 
 The import is a one-time job: roughly 1,200 song-list pages and 370 film-list
@@ -311,14 +327,13 @@ pages, fetched politely with a delay. Nothing is scraped on every visit.
 
 ## Notes
 
-* The MSI statistics page counts 9,343 films / 30,398 songs. The alphabetical
+* The source statistics page counts 9,343 films / 30,398 songs. The alphabetical
   listings expose 9,258 films / 30,390 songs; adding the 61 films that songs
   reference but the listing omits gives 9,319 films. The remaining
   24 films and 8 songs are not reachable from the A–Z (letter-only) listings.
 * Song pages have an in-page *Play* button when a video has been matched, plus
-  a link to a YouTube search and to the source song page; film pages link to the
-  source film page. No audio, video or lyrics files are hosted here — playback
-  embeds the public YouTube upload through the official IFrame player.
+  a link to a video search. No audio, video or lyrics files are hosted here —
+  playback embeds the matched video through the official embedded player.
 * Songs with no known year are grouped under **Unknown year** (`#/year/0`).
 * Malayalam text uses the system's Malayalam font (Nirmala UI on Windows,
   Noto Sans Malayalam on Linux/Android, Malayalam Sangam MN on macOS); no web
