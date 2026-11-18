@@ -1,6 +1,6 @@
 /* Malayalam Film Songs — The Complete Playlist
- * Static site: reads the packed data files (songs.dat, movies.dat, videos.dat)
- * built from the bilingual MalayalaSangeetham.info (MSI) listings.
+ * Static site: reads the packed data files (songs.dat, movies.dat, videos.dat,
+ * people.dat) built from the bilingual catalogue export.
  */
 (function () {
   "use strict";
@@ -9,7 +9,6 @@
   var MOVIES_URL = "data/movies.dat";
   var VIDEO_URL = "data/videos.dat";
   var PEOPLE_URL = "data/people.dat";
-  var SOURCE = "https://msidb.org/";
 
   var peopleImages = {};
 
@@ -386,7 +385,7 @@
   }
 
   /* ---------------- editable overrides (admin) ---------------- */
-  var OVR_KEY = "msi.overrides.v1";
+  var OVR_KEY = "songdb.overrides.v1";
 
   function emptyOverrides() { return { songs: {}, movies: {} }; }
 
@@ -640,7 +639,7 @@ state.ragams = new Map();
     var out = [];
     map.forEach(function (arr, key) {
       var p = state.people.get(key) || { en: key, ml: "" };
-      out.push({ key: key, name: p.en || p.ml, ml: p.en ? p.ml : "", count: arr.length });
+      out.push({ key: key, name: p.en || p.ml, ml: p.en ? p.ml : "", count: arr.length, img: p.sl || "" });
     });
     out.sort(function (a, b) { return cmp(a.name, b.name); });
     return out;
@@ -725,22 +724,88 @@ state.ragams = new Map();
     return text ? '<span lang="ml" class="ml' + (cls ? " " + cls : "") + '">' + esc(text) + "</span>" : "";
   }
 
-  function songRow(s, n) {
+  /* video match grade shown beside a song */
+  var CONF_LABEL = { high: "High", medium: "Medium", low: "Low", manual: "Manual" };
+  function gradeOf(s) {
+    var v = s ? state.videos.get(s.id) : null;
+    if (!v) return { cls: "none", label: "No match" };
+    var c = String(v.conf || "").toLowerCase();
+    if (CONF_LABEL[c]) return { cls: c, label: CONF_LABEL[c] };
+    return { cls: "ok", label: "Matched" };
+  }
+
+  function songRow(s, n, withGrade) {
     var a = document.createElement("a");
     a.className = "srow";
     a.href = hashFor(["song", s.id]);
     var movie = s.movie ? s.movie.title || s.movie.titleMl : "";
+    var sub = esc(movie || "—") + (s.year ? " · " + s.year : "");
+    if (withGrade && isAdmin()) {
+      var g = gradeOf(s);
+      sub += ' <span class="gb gb-' + g.cls + '">' + g.label + "</span>";
+    }
     a.innerHTML =
       '<span class="n">' + n + "</span>" +
       '<span class="t">' +
         '<span class="tt">' + esc(s.title || s.titleMl) + "</span>" +
         (s.title && s.titleMl ? mlSpan(s.titleMl, "tml") : "") +
-        '<span class="ts">' + esc(movie || "—") + (s.year ? " · " + s.year : "") + "</span>" +
+        '<span class="ts">' + sub + "</span>" +
       "</span>" +
       '<span class="a">' + esc(namesOf(s.singers) || "—") + "</span>" +
       '<span class="m">' + esc(namesOf(s.music) || "—") + "</span>" +
       '<span class="y">' + (s.year || "") + "</span>";
     return a;
+  }
+
+  /* songRow plus the row controls. Signed out: a play button that appears on hover.
+     Signed in as admin: an always-visible play button and a pencil button beside it.
+     The row itself is a link, so the controls must be siblings. */
+  function songRowWrapped(s, n, withGrade, queueIds) {
+    var wrap = document.createElement("div");
+    wrap.className = "srow-wrap";
+    var rel = document.createElement("div");
+    rel.className = "srow-rel";
+    rel.appendChild(songRow(s, n, withGrade));
+    var playTitle = s.title || s.titleMl || "song";
+    function playThis(ev) {
+      ev.preventDefault(); ev.stopPropagation();
+      if (!hasVideo(s)) { toast("No video has been matched for this song yet."); return; }
+      playQueue(queueIds || [s.i], playTitle, s.i);
+    }
+    if (isAdmin()) {
+      wrap.appendChild(rel);
+      var tools = document.createElement("div");
+      tools.className = "rowtools";
+      var play = document.createElement("button");
+      play.className = "rowicon";
+      play.type = "button";
+      play.title = "Play";
+      play.setAttribute("aria-label", "Play " + playTitle);
+      play.textContent = "▶";
+      play.addEventListener("click", playThis);
+      tools.appendChild(play);
+      var b = document.createElement("button");
+      b.className = "rowicon admrow-edit";
+      b.type = "button";
+      b.setAttribute("data-kind", "song");
+      b.setAttribute("data-id", s.id);
+      b.title = "Edit this song (admin)";
+      b.setAttribute("aria-label", "Edit this song (admin)");
+      b.innerHTML = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.83 2.83 0 0 1 4 4L8 20l-5 1 1-5L17 3z"/></svg>';
+      tools.appendChild(b);
+      wrap.appendChild(tools);
+      return wrap;
+    }
+    var hoverPlay = document.createElement("button");
+    hoverPlay.className = "rowplay";
+    hoverPlay.type = "button";
+    hoverPlay.title = "Play";
+    hoverPlay.setAttribute("aria-label", "Play " + playTitle);
+    hoverPlay.textContent = "▶";
+    hoverPlay.addEventListener("click", playThis);
+    rel.appendChild(hoverPlay);
+    wrap.appendChild(rel);
+    return wrap;
   }
 
   /* ---------------- home ---------------- */
@@ -854,6 +919,10 @@ state.ragams = new Map();
     return '<span class="name">' + esc(e.name) + (e.ml ? mlSpan(e.ml) : "") + "</span>";
   }
 
+  function ecardImg(src) {
+    return src ? '<img class="ecard-img" src="' + esc(src) + '" alt="" onerror="this.style.display=&#39;none&#39;">' : "";
+  }
+
   function renderEntityIndex(kindKey) {
     var kind = KINDS[kindKey];
     var entries = entityEntries(state.indexes[kind.key]);
@@ -881,11 +950,111 @@ state.ragams = new Map();
         var a = document.createElement("a");
         a.className = "ecard";
         a.href = hashFor([kind.route, it.name]);
-        a.innerHTML = entityNameHtml(it) + '<span class="num">' + num(it.count) + "</span>";
+        a.innerHTML = ecardImg(it.img) + entityNameHtml(it) + '<span class="num">' + num(it.count) + "</span>";
         return a;
       }, function (it) { return letterOf(it.name); }, 240);
     }
     box.addEventListener("input", draw);
+    draw();
+  }
+
+  /* ---------------- all songs, flat A→Z, incl. weak/missing ---------------- */
+  function renderAllSongs() {
+    var songs = state.songs || [];
+    var gradePill = function (cls, label, gbCls) {
+      return '<button type="button" class="gpill gb ' + gbCls + '" data-grade="' + cls + '" aria-pressed="false">' + label + "</button>";
+    };
+    var adminGrade = isAdmin();
+    var gradeFilterHtml = adminGrade ? (
+      '<div class="gradkey" id="gradeFilter" role="group" aria-label="Filter by video match grade">' +
+        '<span class="mut gk-label">Grade:</span>' +
+        gradePill("high", "High", "gb-high") +
+        gradePill("medium", "Medium", "gb-medium") +
+        gradePill("low", "Low", "gb-low") +
+        gradePill("manual", "Manual", "gb-manual") +
+        gradePill("none", "No match", "gb-none") +
+        '<button class="gpill-clear" id="gradeClear" type="button" hidden>Clear ×</button>' +
+        '<span class="mut gk-hint">none selected = all</span>' +
+      '</div>'
+    ) : '';
+    var html =
+      crumbs([{ label: "All songs" }]) +
+      '<div class="pagehead"><div class="kicker">Browse</div><h1>All songs</h1>' +
+      '<div class="sub"><b>' + num(songs.length) + '</b> songs · <b>' + num(state.videos.size) + '</b> with a matched video · every entry, including weak or missing ones</div></div>' +
+      '<div class="tools"><input id="filterBox" type="search" placeholder="Filter all songs…" autocomplete="off" />' +
+      '<span class="mut" id="filterCount"></span></div>' +
+      gradeFilterHtml +
+      '<div class="slist" id="slist"></div>';
+    layout(html);
+
+    var box = el("filterBox"), listEl = el("slist"), countEl = el("filterCount");
+    var gradeBtns = Array.prototype.slice.call(document.querySelectorAll("#gradeFilter .gpill"));
+    var clearBtn = el("gradeClear");
+    var gradeSel = {};
+    var filtered = songs;
+
+    function anyGradeSel() {
+      for (var k in gradeSel) { if (gradeSel[k]) return true; }
+      return false;
+    }
+    function applyFilter() {
+      var q = box.value.trim().toLowerCase();
+      var sel = anyGradeSel();
+      filtered = songs.filter(function (s) {
+        if (q && s.hay.indexOf(q) < 0) return false;
+        if (sel && !gradeSel[gradeOf(s).cls]) return false;
+        return true;
+      });
+      countEl.textContent = (q || sel) ? num(filtered.length) + " found" : "";
+    }
+
+    function draw() {
+      listEl.innerHTML = "";
+      var sorted = songSort(filtered, "az");
+      if (!sorted.length) {
+        listEl.innerHTML = '<div class="nores">No songs match that filter.</div>';
+        return;
+      }
+      var ids = sorted.map(function (x) { return x.i; });
+      chunked(listEl, sorted, function (s, n) { return songRowWrapped(s, n + 1, true, ids); }, function (s) {
+        return letterOf(s.title || s.titleMl || "");
+      }, 250);
+    }
+    function syncPills() {
+      if (gradeBtns.length > 0) {
+        gradeBtns.forEach(function (b) {
+          var on = !!gradeSel[b.getAttribute("data-grade")];
+          b.classList.toggle("on", on);
+          b.setAttribute("aria-pressed", on ? "true" : "false");
+        });
+      }
+      if (clearBtn) clearBtn.hidden = !anyGradeSel();
+    }
+    if (gradeBtns.length > 0) {
+      gradeBtns.forEach(function (b) {
+        b.addEventListener("click", function () {
+          var k = b.getAttribute("data-grade");
+          gradeSel[k] = !gradeSel[k];
+          if (!gradeSel[k]) delete gradeSel[k];
+          syncPills();
+          applyFilter();
+          draw();
+        });
+      });
+    }
+    if (clearBtn) {
+      clearBtn.addEventListener("click", function () {
+        gradeSel = {};
+        syncPills();
+        applyFilter();
+        draw();
+      });
+    }
+    box.addEventListener("input", function () {
+      applyFilter();
+      draw();
+    });
+    syncPills();
     draw();
   }
 
@@ -938,7 +1107,8 @@ state.ragams = new Map();
           esc(songs.length ? "No songs match that filter." : (opts.emptyText || "No songs listed.")) + "</div>";
         return;
       }
-      r = chunked(listEl, sorted, function (s, n) { return songRow(s, n + 1); }, null, 250);
+      var ids = sorted.map(function (x) { return x.i; });
+      r = chunked(listEl, sorted, function (s, n) { return songRowWrapped(s, n + 1, false, ids); }, null, 250);
     }
     box.addEventListener("input", apply);
     el("playList").addEventListener("click", function () {
@@ -1101,8 +1271,7 @@ state.ragams = new Map();
     if (m.music.length) bits.push("Music: " + chips("music", m.music));
     if (m.lyricist.length) bits.push("Lyrics: " + chips("lyricist", m.lyricist));
     if (m.director.length) bits.push("Directed by " + chips("director", m.director));
-    if (isAdmin()) bits.push('<a href="' + hashFor(["admin", "movie", m.id]) + '">Edit</a>');
-    bits.push('<a href="' + SOURCE + "m.php?" + encodeURIComponent(m.id) + '" target="_blank" rel="noopener">Source ↗</a>');
+    if (isAdmin()) bits.push('<button type="button" class="admrow-edit admsub-link" data-kind="movie" data-id="' + esc(m.id) + '">Edit</button>');
     var sub = bits.join(" · ");
 
     songsView({
@@ -1168,9 +1337,8 @@ state.ragams = new Map();
           "</dl>" +
           '<div class="actions">' +
             '<button class="btn primary" id="songPlay">▶ Play</button>' +
-            '<a class="btn" href="' + ytSearch + '" target="_blank" rel="noopener">Search on YouTube ↗</a>' +
-            '<a class="btn" href="' + SOURCE + "s.php?" + encodeURIComponent(s.id) + '" target="_blank" rel="noopener">Source page ↗</a>' +
-            (isAdmin() ? '<a class="btn" href="' + hashFor(["admin", "song", s.id]) + '">Edit</a>' : "") +
+            '<a class="btn" href="' + ytSearch + '" target="_blank" rel="noopener">Search video ↗</a>' +
+            (isAdmin() ? '<button class="btn admrow-edit" type="button" data-kind="song" data-id="' + esc(s.id) + '">Edit</button>' : "") +
           "</div></div>" +
         "</div>" +
         '<aside class="card"><h2>More from this movie</h2><div id="moreFromMovie" class="slist"></div></aside>' +
@@ -1179,7 +1347,7 @@ state.ragams = new Map();
     layout(html);
 
     el("songPlay").addEventListener("click", function () {
-      if (!hasVideo(s)) { toast("No YouTube video has been matched for this song yet."); return; }
+      if (!hasVideo(s)) { toast("No video has been matched for this song yet."); return; }
       var ids = (s.movie && s.movie.songIds.length) ? s.movie.songIds : [s.i];
       playQueue(ids, s.movie ? (s.movie.title || s.movie.titleMl) : (s.title || s.titleMl), s.i);
     });
@@ -1189,7 +1357,10 @@ state.ragams = new Map();
       var others = m.songIds.filter(function (i) { return i !== s.i; }).slice(0, 12)
         .map(function (i) { return state.songs[i]; });
       var host = el("moreFromMovie");
+      var otherIds = others.map(function (x) { return x.i; });
       others.forEach(function (o, n) {
+        var rel = document.createElement("div");
+        rel.className = "srow-rel";
         var a = document.createElement("a");
         a.className = "srow side";
         a.href = hashFor(["song", o.id]);
@@ -1199,7 +1370,20 @@ state.ragams = new Map();
             (o.title && o.titleMl ? mlSpan(o.titleMl, "tml") : "") +
             '<span class="ts">' + esc(namesOf(o.singers) || "—") + "</span>" +
           "</span>";
-        host.appendChild(a);
+        rel.appendChild(a);
+        var play = document.createElement("button");
+        play.className = "rowplay";
+        play.type = "button";
+        play.title = "Play";
+        play.setAttribute("aria-label", "Play " + (o.title || o.titleMl || "song"));
+        play.textContent = "▶";
+        play.addEventListener("click", function (ev) {
+          ev.preventDefault(); ev.stopPropagation();
+          if (!hasVideo(o)) { toast("No video has been matched for this song yet."); return; }
+          playQueue(otherIds, o.title || o.titleMl || "", o.i);
+        });
+        rel.appendChild(play);
+        host.appendChild(rel);
       });
     } else {
       el("moreFromMovie").innerHTML = '<div class="dim" style="font-size:13px">No other songs listed.</div>';
@@ -1214,19 +1398,19 @@ state.ragams = new Map();
   }
 
   /* ---------------- comments ----------------
-     The form writes to a Google Sheet. A small Apps Script web app in that
-     sheet returns the latest comments for one item as JSONP, because a static
-     page cannot read the sheet directly. See comments/SETUP.md. */
+     The form writes to a linked spreadsheet. A small script web app in that
+     spreadsheet returns the latest comments for one item as JSONP, because a
+     static page cannot read the sheet directly. See comments/SETUP.md. */
   var jsonpSeq = 0;
 
   function commentsConfig() {
-    var c = window.MSI_COMMENTS;
+    var c = window.SONG_COMMENTS;
     return (c && c.formUrl && c.apiUrl) ? c : null;
   }
 
   function jsonp(url, params, timeoutMs) {
     return new Promise(function (resolve, reject) {
-      var name = "__msiJsonp" + (++jsonpSeq) + "_" + Math.random().toString(36).slice(2, 8);
+      var name = "__songJsonp" + (++jsonpSeq) + "_" + Math.random().toString(36).slice(2, 8);
       var script = document.createElement("script");
       var timer = setTimeout(function () {
         finish();
@@ -1264,8 +1448,9 @@ state.ragams = new Map();
     return c.formUrl + (c.formUrl.indexOf("?") < 0 ? "?" : "&") + parts.join("&");
   }
 
-  /* The Google Form's own submission endpoint. The themed form posts here in a
-     hidden iframe, so Google records the row without showing its white UI. */
+  /* The form's own submission endpoint. The themed form posts here in a
+     hidden iframe, so the response is recorded without showing the provider's
+     white UI. */
   function commentActionUrl() {
     var c = commentsConfig();
     if (!c) return "";
@@ -1315,7 +1500,7 @@ state.ragams = new Map();
           '<button class="btn primary" type="submit" id="cmSubmit">Post comment</button>' +
           '<button class="btn" type="button" id="cmClose">Cancel</button>' +
           '<a class="btn" id="cmOpen" href="' + esc(prefill) +
-            '" target="_blank" rel="noopener">Open the Google Form ↗</a>' +
+            '" target="_blank" rel="noopener">Open the form ↗</a>' +
           '<span class="cmmsg" id="cmMsg" role="status" aria-live="polite"></span>' +
         "</div>" +
         '<p class="mut cmnote">Your comment and name are public on this page. ' +
@@ -1437,11 +1622,11 @@ state.ragams = new Map();
         if (!posting) return;
         posting = false;
         submit.disabled = false;
-        setMsg("The form did not confirm the post. Try the Google Form link if it doesn't appear.", true);
+        setMsg("The form did not confirm the post. Try the form link if it doesn't appear.", true);
       }, 15000);
     });
 
-    /* The hidden iframe loads Google's confirmation page when the POST is
+    /* The hidden iframe loads the form's confirmation page when the POST is
        accepted. The response is cross-origin, so we can only use the load
        event — then re-read the sheet. */
     frame.addEventListener("load", function () {
@@ -1483,7 +1668,7 @@ state.ragams = new Map();
         return (e.name + " " + e.ml).toLowerCase().indexOf(needle) >= 0;
       }).slice(0, 8);
       list.forEach(function (e) {
-        entHits.push({ href: hashFor([kind.route, e.name]), name: e.name, ml: e.ml, label: kind.singular, count: e.count });
+        entHits.push({ href: hashFor([kind.route, e.name]), name: e.name, ml: e.ml, label: kind.singular, count: e.count, img: e.img });
       });
     });
     ragamEntries().filter(function (e) {
@@ -1508,6 +1693,7 @@ state.ragams = new Map();
       html += '<div class="sectionhead"><h2>Names</h2></div><div class="elist">';
       entHits.forEach(function (e) {
         html += '<a class="ecard" href="' + e.href + '">' +
+          ecardImg(e.img) +
           '<span class="name">' + esc(e.name) + (e.ml ? mlSpan(e.ml) : "") +
           ' <span class="pill">' + esc(e.label) + "</span></span>" +
           '<span class="num">' + num(e.count) + "</span></a>";
@@ -1522,13 +1708,13 @@ state.ragams = new Map();
       el("searchShuffle").addEventListener("click", function () { shuffleQueue(hitIds, 'Search: "' + q + '"'); });
     }
     if (shown.length) {
-      chunked(el("searchList"), shown, function (s, n) { return songRow(s, n + 1); }, null, 200);
+      chunked(el("searchList"), shown, function (s, n) { return songRowWrapped(s, n + 1, false, hitIds); }, null, 200);
     } else {
       el("searchList").innerHTML = '<div class="nores">No songs match “' + esc(q) + "”.</div>";
     }
   }
 
-  /* ---------------- YouTube player ---------------- */
+  /* ---------------- video player ---------------- */
   var ytApi = { loading: false, ready: false, cbs: [] };
 
   function hasVideo(s) { return !!(s && state.videos.get(s.id)); }
@@ -1796,7 +1982,7 @@ state.ragams = new Map();
       '<div class="pnactions">' +
         '<a class="btn" href="' + hashFor(["song", s.id]) + '">Song page</a>' +
         (hasVideo(s) ? '<a class="btn" href="https://www.youtube.com/watch?v=' +
-          encodeURIComponent(videoOf(s).id) + '" target="_blank" rel="noopener">YouTube ↗</a>' : "") +
+          encodeURIComponent(videoOf(s).id) + '" target="_blank" rel="noopener">Watch ↗</a>' : "") +
         '<a class="btn" href="' + ytSearchFor(s) + '" target="_blank" rel="noopener">Search ↗</a>' +
       "</div></div>";
 
@@ -1957,15 +2143,15 @@ state.ragams = new Map();
   /* ---------------- Picture-in-Picture (desktop Chrome/Edge) ---------------- */
   var pipWindow = null;
 
-  /* On coarse-pointer devices, Chromium/iOS suspend the YouTube iframe as soon
+  /* On coarse-pointer devices, Chromium/iOS suspend the video iframe as soon
      as the user leaves the browser. Say so once per session and point at the
-     routes that do work (Samsung Internet background play, YouTube app). */
+     routes that do work (background-capable browsers, the video app). */
   function maybeMobileBgHint() {
     try {
       if (!window.matchMedia || !window.matchMedia("(pointer: coarse)").matches) return;
-      if (sessionStorage.getItem("msi.bghint")) return;
-      sessionStorage.setItem("msi.bghint", "1");
-      toast("On this phone, YouTube pauses when you switch apps. For background play, use Samsung Internet (free), or open the video in the YouTube app from the song page.", 9000);
+      if (sessionStorage.getItem("songdb.bghint")) return;
+      sessionStorage.setItem("songdb.bghint", "1");
+      toast("On this phone, the video pauses when you switch apps. For background play, use a browser with background play (such as Samsung Internet, free), or open the video in the video app from the song page.", 9000);
     } catch (e) { }
   }
 
@@ -2008,7 +2194,7 @@ state.ragams = new Map();
 
       try {
         var doc = pw.document;
-        doc.title = "Now playing — MalayalaSangeetham";
+        doc.title = "Now playing — Malayalam Film Songs";
         var st = doc.createElement("style");
         st.textContent =
           "body{margin:0;background:#0d1015;color:#e8edf3;font-family:system-ui,'Segoe UI',sans-serif;display:flex;flex-direction:column;height:100vh;overflow:hidden}" +
@@ -2080,10 +2266,10 @@ state.ragams = new Map();
     var s = document.createElement("script");
     s.src = "https://www.youtube.com/iframe_api";
     s.async = true;
-    s.onerror = function () { ytApi.loading = false; toast("Could not load the YouTube player."); };
+    s.onerror = function () { ytApi.loading = false; toast("Could not load the player."); };
     document.head.appendChild(s);
     setTimeout(function () {
-      if (!ytApi.ready) { ytApi.loading = false; toast("The YouTube player is taking too long to load."); }
+      if (!ytApi.ready) { ytApi.loading = false; toast("The player is taking too long to load."); }
     }, 12000);
   }
 
@@ -2150,7 +2336,7 @@ state.ragams = new Map();
 
   function playQueue(ids, label, startAt) {
     var list = ids.filter(function (i) { var s = state.songs[i]; return s && hasVideo(s); });
-    if (!list.length) { toast("No YouTube videos are available for this selection yet."); return; }
+    if (!list.length) { toast("No videos are available for this selection yet."); return; }
     player.queue = list;
     player.order = list.map(function (_, i) { return i; });
     player.shuffle = false;
@@ -2168,7 +2354,7 @@ state.ragams = new Map();
 
   function shuffleQueue(ids, label) {
     var list = ids.filter(function (i) { var s = state.songs[i]; return s && hasVideo(s); });
-    if (!list.length) { toast("No YouTube videos are available for this selection yet."); return; }
+    if (!list.length) { toast("No videos are available for this selection yet."); return; }
     player.queue = list;
     player.order = shuffled(list.map(function (_, i) { return i; }));
     player.shuffle = true;
@@ -2368,9 +2554,9 @@ state.ragams = new Map();
     salt: "fcXgSIEcdX+XnQu3lJV/OQ==",
     iter: 310000,
     hash: "A2rgjpFgwN5mocgCJcAA5mR8cmImHjKdGjV9LWi/Gic=",
-    session: "msi.admin.v1",
-    tries: "msi.admin.tries",
-    lock: "msi.admin.lock",
+    session: "songdb.admin.v1",
+    tries: "songdb.admin.tries",
+    lock: "songdb.admin.lock",
     hours: 8
   };
 
@@ -2458,8 +2644,20 @@ state.ragams = new Map();
 
   function renderAdmin(what, id) {
     if (!isAdmin()) return renderLogin();
-    if (what === "song" && id) return renderSongEditor(id);
-    if (what === "movie" && id) return renderMovieEditor(id);
+    if (what === "song") {
+      renderAdminHome();
+      var s = id ? state.byId.get(String(id)) : null;
+      if (s) return openEditDialog("song", s);
+      toast("Song not found: " + id);
+      return;
+    }
+    if (what === "movie") {
+      renderAdminHome();
+      var m = id ? state.movies.get(String(id)) : null;
+      if (m) return openEditDialog("movie", m);
+      toast("Film not found: " + id);
+      return;
+    }
     return renderAdminHome();
   }
 
@@ -2503,9 +2701,9 @@ state.ragams = new Map();
         '</div>' +
         '<div class="card admcard"><h2>Comments</h2>' +
           "<p class=\"mut\">" + (commentsConfig()
-            ? "Comments are live on song and film pages. The themed form there posts through your Google Form into its " +
+            ? "Comments are live on song and film pages. The themed form there posts through your form into its " +
               "linked sheet; delete a row (or clear its comment) to remove a comment from the site."
-            : "Not set up yet. Create the Google Form, link it to a Sheet and deploy the reader described in " +
+            : "Not set up yet. Create the form, link it to a sheet and deploy the reader described in " +
               "<code>comments/SETUP.md</code>, then fill in <code>assets/comments-config.js</code>.") + "</p>" +
         "</div>" +
         '<div class="card admcard"><h2>How the data is protected</h2>' +
@@ -2574,16 +2772,16 @@ state.ragams = new Map();
     }
     function songRow(s) {
       var film = s.movie ? (s.movie.title || s.movie.titleMl) : "";
-      return '<a class="admres" href="' + hashFor(["admin", "song", s.id]) + '">' +
+      return '<button type="button" class="admres admrow-edit" data-kind="song" data-id="' + esc(s.id) + '">' +
         '<span class="tag">Song</span><span class="rmain"><b>' + esc(s.title || s.titleMl) + "</b>" +
         (s.titleMl && s.title ? ' <span lang="ml" class="rml">' + esc(s.titleMl) + "</span>" : "") +
-        '<small>' + esc(film) + (s.year ? " · " + s.year : "") + "</small></span></a>";
+        '<small>' + esc(film) + (s.year ? " · " + s.year : "") + "</small></span></button>";
     }
     function movieRow(m) {
-      return '<a class="admres" href="' + hashFor(["admin", "movie", m.id]) + '">' +
+      return '<button type="button" class="admres admrow-edit" data-kind="movie" data-id="' + esc(m.id) + '">' +
         '<span class="tag film">Film</span><span class="rmain"><b>' + esc(m.title || m.titleMl) + "</b>" +
         (m.titleMl && m.title ? ' <span lang="ml" class="rml">' + esc(m.titleMl) + "</span>" : "") +
-        "<small>" + (m.year || "—") + " · " + num(m.songIds.length) + " " + plural(m.songIds.length, "song") + "</small></span></a>";
+        "<small>" + (m.year || "—") + " · " + num(m.songIds.length) + " " + plural(m.songIds.length, "song") + "</small></span></button>";
     }
     var html = songs.map(songRow).join("") + movies.map(movieRow).join("");
     box.innerHTML = html || '<p class="mut">Nothing matched.</p>';
@@ -2600,38 +2798,91 @@ state.ragams = new Map();
       '<label class="admfield">Malayalam<input name="' + mlName + '" value="' + esc(mlValue) + '" lang="ml"></label></div>';
   }
 
-  function renderSongEditor(id) {
-    var s = state.byId.get(String(id));
-    if (!s) { notFound("song"); return; }
-    var has = !!(state.overrides.songs[s.id] && Object.keys(state.overrides.songs[s.id]).length);
-    var vid = (state.videos.get(s.id) || {}).id || "";
+  /* ---------------- admin edit popup ---------------- */
+  var OPEN_EDIT = { kind: "", entity: null };
 
-    layout(crumbs([{ label: "Admin", href: "#/admin" }, { label: "Song" }]) +
-      '<div class="admwrap admnarrow">' +
-        '<div class="pagehead"><div class="kicker">Admin · song ' + esc(s.id) + '</div>' +
-        '<h1>' + esc(s.title || s.titleMl) + '</h1>' +
-        '<div class="sub"><a href="' + hashFor(["song", s.id]) + '">View the public page</a></div></div>' +
-        '<div class="card admcard"><form id="editForm" class="admform">' +
-          admField("Title (English)", "title", s.title) +
-          admField("Title (Malayalam)", "titleMl", s.titleMl, ' lang="ml"') +
-          '<div class="admpair"><div class="admpairhead">Release</div>' +
-            '<label class="admfield">Year<input name="year" type="number" min="0" max="2100" value="' + (s.year || "") + '"></label>' +
-            '<label class="admfield">Film<input value="' + esc(s.movie ? (s.movie.title || s.movie.titleMl) : "") + '" disabled></label>' +
-          "</div>" +
-          admPair("Singers", "singers", namesOf(s.singers), "singersMl", mlNames(s.singers)) +
-          admPair("Lyricist", "lyricist", namesOf(s.lyricist), "lyricistMl", mlNames(s.lyricist)) +
-          admPair("Music", "music", namesOf(s.music), "musicMl", mlNames(s.music)) +
-          admField("YouTube video ID", "videoId", vid, ' maxlength="11" spellcheck="false" autocomplete="off"') +
-          '<p class="mut admhint">The 11-character code after <code>watch?v=</code>. Leave it empty to mark the song as unplayable.</p>' +
+  function editFormHtml(kind, ent) {
+    if (kind === "song") {
+      var s = ent;
+      var has = !!(state.overrides.songs[s.id] && Object.keys(state.overrides.songs[s.id]).length);
+      var vid = (state.videos.get(s.id) || {}).id || "";
+      return {
+        kicker: "Admin · song " + esc(s.id),
+        title: s.title || s.titleMl || "",
+        html:
+          '<form id="editForm" class="admform">' +
+            admField("Title (English)", "title", s.title) +
+            admField("Title (Malayalam)", "titleMl", s.titleMl, ' lang="ml"') +
+            '<div class="admpair"><div class="admpairhead">Release</div>' +
+              '<label class="admfield">Year<input name="year" type="number" min="0" max="2100" value="' + (s.year || "") + '"></label>' +
+              '<label class="admfield">Film<input value="' + esc(s.movie ? (s.movie.title || s.movie.titleMl) : "") + '" disabled></label>' +
+            "</div>" +
+            admPair("Singers", "singers", namesOf(s.singers), "singersMl", mlNames(s.singers)) +
+            admPair("Lyricist", "lyricist", namesOf(s.lyricist), "lyricistMl", mlNames(s.lyricist)) +
+            admPair("Music", "music", namesOf(s.music), "musicMl", mlNames(s.music)) +
+            admField("Video ID", "videoId", vid, ' maxlength="11" spellcheck="false" autocomplete="off"') +
+            '<p class="mut admhint">The 11-character code after <code>watch?v=</code>. Leave it empty to mark the song as unplayable.</p>' +
+            '<div class="actions"><button class="btn primary" type="submit">Save</button>' +
+              '<button class="btn" type="button" data-close>Cancel</button>' +
+              (has ? '<button class="btn" type="button" id="admRevert">Revert this song</button>' : "") +
+            "</div>" +
+          "</form>",
+        wire: function () {
+          el("editForm").addEventListener("submit", function (ev) { ev.preventDefault(); saveSongEdit(s); });
+          if (has) el("admRevert").addEventListener("click", function () { revertOverride("songs", s.id); });
+        }
+      };
+    }
+    var m = ent;
+    var hasM = !!(state.overrides.movies[m.id] && Object.keys(state.overrides.movies[m.id]).length);
+    return {
+      kicker: "Admin · film " + esc(m.id),
+      title: m.title || m.titleMl || "",
+      html:
+        '<form id="editForm" class="admform">' +
+          admField("Title (English)", "title", m.title) +
+          admField("Title (Malayalam)", "titleMl", m.titleMl, ' lang="ml"') +
+          admField("Year", "year", m.year || "", ' type="number" min="0" max="2100"') +
+          admPair("Director", "director", namesOf(m.director), "directorMl", mlNames(m.director)) +
+          admPair("Music", "music", namesOf(m.music), "musicMl", mlNames(m.music)) +
+          admPair("Lyricist", "lyricist", namesOf(m.lyricist), "lyricistMl", mlNames(m.lyricist)) +
+          '<p class="mut admhint">Correcting the year here also updates every song in the film.</p>' +
           '<div class="actions"><button class="btn primary" type="submit">Save</button>' +
-            '<a class="btn" href="#/admin">Cancel</a>' +
-            (has ? '<button class="btn" type="button" id="admRevert">Revert this song</button>' : "") +
+            '<button class="btn" type="button" data-close>Cancel</button>' +
+            (hasM ? '<button class="btn" type="button" id="admRevert">Revert this film</button>' : "") +
           "</div>" +
-        "</form></div>" +
-      "</div>");
+        "</form>",
+      wire: function () {
+        el("editForm").addEventListener("submit", function (ev) { ev.preventDefault(); saveMovieEdit(m); });
+        if (hasM) el("admRevert").addEventListener("click", function () { revertOverride("movies", m.id); });
+      }
+    };
+  }
 
-    el("editForm").addEventListener("submit", function (ev) { ev.preventDefault(); saveSongEdit(s); });
-    if (has) el("admRevert").addEventListener("click", function () { revertOverride("songs", s.id); });
+  function openEditDialog(kind, entity) {
+    if (!entity) { toast("That entry could not be found."); return; }
+    OPEN_EDIT.kind = kind; OPEN_EDIT.entity = entity;
+    var ov = el("editModal"), body = el("editModalBody");
+    var spec = editFormHtml(kind, entity);
+    el("editModalKicker").textContent = spec.kicker;
+    el("editModalTitle").textContent = spec.title;
+    body.innerHTML = spec.html;
+    spec.wire();
+    Array.prototype.forEach.call(body.querySelectorAll("[data-close]"), function (b) {
+      b.addEventListener("click", closeEditDialog);
+    });
+    ov.hidden = false;
+    document.body.style.overflow = "hidden";
+    var first = body.querySelector("input");
+    if (first) first.focus();
+  }
+
+  function closeEditDialog() {
+    var ov = el("editModal");
+    if (!ov || ov.hidden) return;
+    ov.hidden = true;
+    document.body.style.overflow = "";
+    OPEN_EDIT.kind = ""; OPEN_EDIT.entity = null;
   }
 
   function saveSongEdit(s) {
@@ -2658,7 +2909,7 @@ state.ragams = new Map();
       patch.musicMl = e.musicMl.value.trim();
     }
     var vid = e.videoId.value.trim();
-    if (vid && !/^[A-Za-z0-9_-]{11}$/.test(vid)) { toast("A YouTube video ID is 11 characters."); return; }
+    if (vid && !/^[A-Za-z0-9_-]{11}$/.test(vid)) { toast("A video ID is 11 characters."); return; }
     if (vid !== ((state.videos.get(s.id) || {}).id || "")) patch.videoId = vid;
 
     if (!Object.keys(patch).length) { toast("No changes to save."); return; }
@@ -2669,36 +2920,8 @@ state.ragams = new Map();
     buildIndexes();
     refreshDrawer();
     toast("Saved on this device — download overrides.json to publish.");
+    closeEditDialog();
     route();
-  }
-
-  function renderMovieEditor(id) {
-    var m = state.movies.get(String(id));
-    if (!m) { notFound("movie"); return; }
-    var has = !!(state.overrides.movies[m.id] && Object.keys(state.overrides.movies[m.id]).length);
-
-    layout(crumbs([{ label: "Admin", href: "#/admin" }, { label: "Film" }]) +
-      '<div class="admwrap admnarrow">' +
-        '<div class="pagehead"><div class="kicker">Admin · film ' + esc(m.id) + '</div>' +
-        '<h1>' + esc(m.title || m.titleMl) + '</h1>' +
-        '<div class="sub"><a href="' + hashFor(["movie", m.id]) + '">View the public page</a></div></div>' +
-        '<div class="card admcard"><form id="editForm" class="admform">' +
-          admField("Title (English)", "title", m.title) +
-          admField("Title (Malayalam)", "titleMl", m.titleMl, ' lang="ml"') +
-          admField("Year", "year", m.year || "", ' type="number" min="0" max="2100"') +
-          admPair("Director", "director", namesOf(m.director), "directorMl", mlNames(m.director)) +
-          admPair("Music", "music", namesOf(m.music), "musicMl", mlNames(m.music)) +
-          admPair("Lyricist", "lyricist", namesOf(m.lyricist), "lyricistMl", mlNames(m.lyricist)) +
-          '<p class="mut admhint">Correcting the year here also updates every song in the film.</p>' +
-          '<div class="actions"><button class="btn primary" type="submit">Save</button>' +
-            '<a class="btn" href="#/admin">Cancel</a>' +
-            (has ? '<button class="btn" type="button" id="admRevert">Revert this film</button>' : "") +
-          "</div>" +
-        "</form></div>" +
-      "</div>");
-
-    el("editForm").addEventListener("submit", function (ev) { ev.preventDefault(); saveMovieEdit(m); });
-    if (has) el("admRevert").addEventListener("click", function () { revertOverride("movies", m.id); });
   }
 
   function saveMovieEdit(m) {
@@ -2733,6 +2956,7 @@ state.ragams = new Map();
     buildIndexes();
     refreshDrawer();
     toast("Saved on this device — download overrides.json to publish.");
+    closeEditDialog();
     route();
   }
 
@@ -2775,12 +2999,33 @@ state.ragams = new Map();
     if (section === "song" && p[1]) return renderSong(p[1]);
     if (section === "ragams") return renderRagams();
     if (section === "ragam" && p[1]) return renderRagamSongs(p[1]);
+    if (section === "songs") return renderAllSongs();
     if (KINDS[section] && !p[1]) return renderEntityIndex(section);
     if (p[1] && ROUTE_KIND[section]) return renderEntitySongs(ROUTE_KIND[section], p[1]);
     renderHome();
   }
 
   window.addEventListener("hashchange", route);
+
+  /* ---------------- admin edit dialog (delegated) ---------------- */
+  document.addEventListener("click", function (ev) {
+    var b = ev.target && ev.target.closest ? ev.target.closest(".admrow-edit") : null;
+    if (!b) return;
+    ev.preventDefault();
+    if (!isAdmin()) return;
+    var id = b.getAttribute("data-id");
+    if (b.getAttribute("data-kind") === "song") return openEditDialog("song", state.byId.get(String(id)));
+    if (b.getAttribute("data-kind") === "movie") return openEditDialog("movie", state.movies.get(String(id)));
+  });
+  var editModal = el("editModal");
+  if (editModal) {
+    editModal.addEventListener("mousedown", function (ev) { if (ev.target === editModal) closeEditDialog(); });
+    var editModalClose = el("editModalClose");
+    if (editModalClose) editModalClose.addEventListener("click", closeEditDialog);
+  }
+  document.addEventListener("keydown", function (ev) {
+    if (ev.key === "Escape") closeEditDialog();
+  });
 
   /* ---------------- search box ---------------- */
   var searchEl = el("globalSearch");

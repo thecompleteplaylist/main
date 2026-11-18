@@ -159,11 +159,13 @@ input{font:inherit}
 .elist .loadmore{grid-column:1/-1;justify-self:center}
 .elist .letterhead{grid-column:1/-1}
 .ecard{
-  display:flex;align-items:baseline;gap:10px;padding:8px 10px;border-radius:9px;
+  display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:9px;
   border:1px solid transparent;font-size:13.5px;min-width:0;
 }
 .ecard:hover{background:var(--bg2);border-color:var(--line)}
-.ecard .name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ecard .name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.ecard .ecard-img{width:38px;height:38px;border-radius:50%;object-fit:cover;flex:none;
+  border:1px solid var(--line);background:var(--bg2)}
 .ecard .num{margin-left:auto;color:var(--dim);font-size:11.5px;flex:none}
 .ecard .yr{color:var(--dim);font-size:11.5px;flex:none}
 
@@ -182,6 +184,13 @@ input{font:inherit}
 .srow .a,.srow .m{font-size:11.8px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .srow .m{color:#9fb0c4}
 .srow .y{font-size:12px;color:var(--dim);text-align:right}
+.gb{display:inline-block;padding:1px 7px;border-radius:999px;font-size:10.5px;font-weight:600;letter-spacing:.02em;vertical-align:1px;white-space:nowrap}
+.gb-high,.gb-ok{background:rgba(74,222,128,.13);color:var(--green)}
+.gb-medium{background:rgba(255,207,107,.14);color:var(--accent2)}
+.gb-low{background:rgba(255,138,128,.15);color:#ff8a80}
+.gb-manual{background:rgba(124,196,255,.15);color:var(--blue)}
+.gb-none{background:rgba(148,162,179,.16);color:var(--muted)}
+.gradkey{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:-4px 0 12px;font-size:11px}
 @media (max-width:900px){
   .srow{grid-template-columns:32px minmax(0,1fr) 48px}
   .srow .a,.srow .m{display:none}
@@ -211,6 +220,11 @@ input{font:inherit}
   background:#1a222c;border:1px solid var(--line2);color:#cfdae8;
 }
 .chip:hover{border-color:#4a5b70;color:var(--accent2)}
+/* admin quick-edit beside a song row */
+.srow-wrap{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}
+.admrow-edit{padding:7px 13px;font-size:12px;white-space:nowrap}
+.admrow-edit:hover{color:var(--accent2)}
+
 .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
 .btn{
   display:inline-block;padding:9px 14px;border-radius:9px;font-size:13px;
@@ -486,3 +500,64 @@ body.hasplayer .toast{bottom:calc(var(--playerbarh, 84px) + 18px)}
 .singer-image{width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid var(--line);display:block;margin:0 auto}
 .entity-poster.singer-poster{max-width:120px;margin:8px auto}
 .entity-poster.singer-poster img{width:120px;height:120px}
+
+/* ---------- admin edit popup ---------- */
+.modal-overlay[hidden]{display:none}
+.modal-overlay{
+  position:fixed;inset:0;z-index:65;overflow:auto;
+  display:flex;align-items:flex-start;justify-content:center;
+  padding:48px 16px 24px;background:rgba(4,6,10,.62);
+}
+.modal{
+  width:100%;max-width:640px;background:var(--bg3);
+  border:1px solid var(--line2);border-radius:var(--radius);
+  box-shadow:0 24px 60px rgba(0,0,0,.55);
+  animation:modalin .16s ease;
+}
+@keyframes modalin{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
+.modal-top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 12px 0 18px}
+.modal-head .kicker{margin:0;color:var(--accent);font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:700}
+.modal-head h2{margin:3px 0 0;font-size:17px;font-weight:600;color:var(--text)}
+.modal-body{padding:14px 18px 18px}
+.modal-body .admform{margin:0}
+.admsub-link{background:none;border:0;padding:0;margin:0;color:var(--accent);cursor:pointer;font:inherit;font-size:inherit}
+.admsub-link:hover{color:var(--accent2);text-decoration:underline}
+button.admres{background:none;color:inherit;font:inherit;text-align:left;cursor:pointer;width:100%}
+
+/* ---------- per-row play button (hover) ---------- */
+.srow-rel{position:relative;min-width:0}
+.srow-rel .srow{padding-right:46px}
+.rowplay{
+  position:absolute;right:7px;top:50%;transform:translateY(-50%);
+  width:32px;height:32px;border-radius:50%;cursor:pointer;
+  border:1px solid rgba(255,255,255,.22);background:rgba(10,12,16,.82);
+  color:var(--text);font-size:12px;line-height:1;
+  display:inline-flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .15s,color .15s,border-color .15s;
+}
+.rowplay:hover{color:#fff;border-color:var(--accent);background:rgba(10,12,16,.95)}
+.srow-rel:hover .rowplay,.srow-rel:focus-within .rowplay{opacity:1;pointer-events:auto}
+@media (hover:none){.rowplay{opacity:1;pointer-events:auto}}
+
+/* row tools (admin): always-visible play + edit pencil */
+.rowtools{display:flex;gap:6px;align-items:center}
+.rowtools .rowicon{
+  width:32px;height:32px;padding:0;border-radius:9px;
+  border:1px solid var(--line2);background:var(--bg2);
+  color:var(--muted);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;
+  font-size:12px;line-height:1;transition:color .15s,border-color .15s,background .15s;
+}
+.rowtools .rowicon:hover{color:var(--text);border-color:var(--accent);background:var(--bg3)}
+
+/* grade filter pills on the All songs tab */
+.gk-label{margin-right:2px}
+.gk-hint{color:var(--dim);margin-left:2px}
+.gpill{cursor:pointer;opacity:.38;border:1px solid transparent;transition:opacity .15s,outline-color .15s}
+.gpill:hover{opacity:.75}
+.gpill.on{opacity:1;outline:1.5px solid rgba(255,255,255,.35);outline-offset:1px}
+.gpill:focus-visible{outline:2px solid var(--accent2);outline-offset:1px}
+.gpill-clear{
+  background:none;border:0;padding:2px 6px;color:var(--accent2);
+  cursor:pointer;font:inherit;font-size:11px;border-radius:6px;
+}
+.gpill-clear:hover{background:var(--bg2);text-decoration:underline}
